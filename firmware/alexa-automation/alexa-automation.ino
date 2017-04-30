@@ -7,6 +7,10 @@
 #define SERIAL_BAUDRATE                 115200
 #define LED                             2
 
+#define RELAYPIN1  14
+#define RELAYPIN2  13
+#define RELAYPIN3  12
+
 fauxmoESP fauxmo;
 
 IRsend irsend(4);
@@ -36,6 +40,17 @@ void wifiSetup() {
 
 }
 
+void gpioSetup(){
+  pinMode(RELAYPIN1,OUTPUT);
+  pinMode(RELAYPIN2,OUTPUT);
+  pinMode(RELAYPIN3,OUTPUT);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
+  digitalWrite(RELAYPIN1, HIGH);
+  digitalWrite(RELAYPIN2, HIGH);
+  digitalWrite(RELAYPIN3, HIGH);
+}
+
 void setup() {
 
     // Init serial port and clean garbage
@@ -52,28 +67,34 @@ void setup() {
     // Wifi
     wifiSetup();
 
-    // LED
-    pinMode(LED, OUTPUT);
-    digitalWrite(LED, HIGH);
+    // Setup GPIO
+    gpioSetup();
 
     // Fauxmo
-    fauxmo.addDevice("desk light");
     fauxmo.addDevice("movie light");
-    fauxmo.addDevice("light three");
-    fauxmo.addDevice("light four");
+    fauxmo.addDevice("bed light");
+    fauxmo.addDevice("tube light");
+    fauxmo.addDevice("dome light");
 
     // fauxmoESP 2.0.0 has changed the callback signature to add the device_id, this WARRANTY
     // it's easier to match devices to action without having to compare strings.
     fauxmo.onMessage([](unsigned char device_id, const char * device_name, bool state) {
+        String device = String(device_name);
         Serial.printf("[MAIN] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
-        if((state ? "ON" : "OFF") == "ON"){
-          irsend.sendNEC(16236607, 32);
-          Serial.println("on command sent");
-        }else{
-          irsend.sendNEC(16203967, 32);
-          Serial.println("off command sent");
+        if(device.equals("dome light")){
+          digitalWrite(RELAYPIN1, !state);
+        }else if(device.equals("tube light")){
+          digitalWrite(RELAYPIN2, !state);
+        }else if(device.equals("bed light")){
+          digitalWrite(RELAYPIN3, !state);
+        }else if(device.equals("movie light")){
+          digitalWrite(LED, !state);
+          if(state){
+            irsend.sendNEC(16236607, 32);
+          }else{
+            irsend.sendNEC(16203967, 32);
+          }
         }
-        digitalWrite(LED, !state);
     });
 
 }
