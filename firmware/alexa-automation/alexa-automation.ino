@@ -67,17 +67,13 @@ void wifiSetup() {
 // Function to connect and reconnect as necessary to the MQTT server.
 // Should be called in the loop function and it will take care if connecting.
 void MQTT_connect() {
-  int8_t ret;
-
   // Stop if already connected.
   if (mqtt.connected()) {
     return;
   }
 
   Serial.print("Connecting to MQTT... ");
-
-  uint8_t retries = 3;
-  if ((ret = mqtt.connect()) == 0) { // connect will return 0 for connected
+  if (mqtt.connect() == 0) { // connect will return 0 for connected
     Serial.println("MQTT Connected!");
   }
 }
@@ -135,6 +131,13 @@ void pushSensorData(){
   } else {
     Serial.println(F("OK!"));
   }
+}
+
+void checkConnection(){
+  if(WiFi.status() != WL_CONNECTED){
+    wifiSetup();
+  }
+  MQTT_connect();
 }
 
 void setup() {
@@ -211,6 +214,7 @@ void loop() {
 
     static unsigned long last = millis();
     if (millis() - last > 5000) {
+        checkConnection();
         pushSensorData();
         last = millis();
         Serial.printf("[MAIN] Free heap: %d bytes\n", ESP.getFreeHeap());
