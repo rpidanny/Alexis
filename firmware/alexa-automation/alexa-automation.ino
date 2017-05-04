@@ -4,20 +4,40 @@
 #include <EEPROM.h>
 #include "fauxmoESP.h"
 #include "credentials.h"
+#include "DHT.h"
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
 
 #define SERIAL_BAUDRATE                 115200
 
-#define LED                             2
+#define DHTPIN 2 
+#define DHTTYPE DHT11
 
 #define RELAYPIN1  14
 #define RELAYPIN2  13
 #define RELAYPIN3  12
 #define RELAYPIN4  15
 
+#define IRTX 16
+#define IRRX 0
 
 fauxmoESP fauxmo;
 
-IRsend irsend(16);
+IRsend irsend(IRTX);
+
+DHT dht(DHTPIN, DHTTYPE);
+
+// Create an ESP8266 WiFiClient class to connect to the MQTT server.
+WiFiClient client;
+// Setup the MQTT client class by passing in the WiFi client and MQTT server and login details.
+Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
+
+// Setup a feed called 'photocell' for publishing.
+// Notice MQTT paths for AIO follow the form: <username>/feeds/<feedname>
+Adafruit_MQTT_Publish humidity = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/humidity");
+Adafruit_MQTT_Publish temperature = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperature");
+Adafruit_MQTT_Publish heatindex = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/heatindex");
+
 
 // -----------------------------------------------------------------------------
 // Wifi
@@ -44,13 +64,31 @@ void wifiSetup() {
 
 }
 
+// Function to connect and reconnect as necessary to the MQTT server.
+// Should be called in the loop function and it will take care if connecting.
+void MQTT_connect() {
+  int8_t ret;
+
+  // Stop if already connected.
+  if (mqtt.connected()) {
+    return;
+  }
+
+  Serial.print("Connecting to MQTT... ");
+
+  uint8_t retries = 3;
+  if ((ret = mqtt.connect()) == 0) { // connect will return 0 for connected
+    Serial.println("MQTT Connected!");
+  }
+}
+
 void gpioSetup(){
   pinMode(RELAYPIN1,OUTPUT);
   pinMode(RELAYPIN2,OUTPUT);
   pinMode(RELAYPIN3,OUTPUT);
   //pinMode(RELAYPIN4,OUTPUT);
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, HIGH);
+  //pinMode(LED, OUTPUT);
+  //digitalWrite(LED, HIGH);
   digitalWrite(RELAYPIN1, EEPROM.read(0));
   digitalWrite(RELAYPIN2, EEPROM.read(1));
   digitalWrite(RELAYPIN3, EEPROM.read(2));
@@ -71,6 +109,34 @@ void writeFlash(int addr,byte data){
   EEPROM.write(addr, data);
   EEPROM.commit();
 }
+
+void pushSensorData(){
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  //compute heat index in celcius
+  float hic = dht.computeHeatIndex(t, h, false);
+  
+  // Now we can publish stuff!
+  Serial.print(F("\nSending sensor val "));
+  Serial.print(h);
+  Serial.print(" : ");
+  Serial.print(t);
+  Serial.print(" : ");
+  Serial.print(hic);
+  Serial.print(" -- ");
+  if (! humidity.publish(h) || ! temperature.publish(t) || ! heatindex.publish(hic) ) {
+    Serial.println(F("Failed"));
+  } else {
+    Serial.println(F("OK!"));
+  }
+}
+
 void setup() {
 
     EEPROM.begin(4);
@@ -89,10 +155,16 @@ void setup() {
 
     // Setup GPIO
     gpioSetup();
+
+    //setup DHT sensor
+    dht.begin();
     
     // Wifi
     wifiSetup();
 
+    //adafruit mqtt
+    MQTT_connect();
+     
     // Fauxmo
     fauxmo.addDevice("movie light");
     fauxmo.addDevice("bed light");
@@ -115,7 +187,7 @@ void setup() {
           digitalWrite(RELAYPIN3, !state);
         }else if(device.equals("movie light")){
           writeFlash(3,!state);
-          digitalWrite(LED, !state);
+          //digitalWrite(LED, !state);
           if(state){
             irsend.sendNEC(16236607, 32);
           }else{
@@ -139,6 +211,7 @@ void loop() {
 
     static unsigned long last = millis();
     if (millis() - last > 5000) {
+        pushSensorData();
         last = millis();
         Serial.printf("[MAIN] Free heap: %d bytes\n", ESP.getFreeHeap());
     }
