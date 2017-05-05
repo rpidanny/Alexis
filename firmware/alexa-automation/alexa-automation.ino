@@ -218,7 +218,7 @@ void loop() {
 
 
     static unsigned long last = millis();
-    if (millis() - last > 5000) {
+    if (millis() - last > 60000) {
         checkConnection();
         pushSensorData();
         last = millis();
