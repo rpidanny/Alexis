@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <IRremoteESP8266.h>
 #include <ESP8266HTTPClient.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 #include "fauxmoESP.h"
 #include "credentials.h"
 #include "DHT.h"
@@ -78,7 +78,7 @@ void MQTT_connect() {
   }
 }
 
-void gpioSetup(){
+/*void gpioSetup(){
   pinMode(RELAYPIN1,OUTPUT);
   pinMode(RELAYPIN2,OUTPUT);
   pinMode(RELAYPIN3,OUTPUT);
@@ -104,7 +104,7 @@ void gpioSetup(){
 void writeFlash(int addr,byte data){
   EEPROM.write(addr, data);
   EEPROM.commit();
-}
+}*/
 
 void pushSensorData(){
   float h = dht.readHumidity();
@@ -154,7 +154,7 @@ void checkConnection(){
 
 void setup() {
 
-    EEPROM.begin(4);
+    //EEPROM.begin(4);
     
     // Init serial port and clean garbage
     Serial.begin(SERIAL_BAUDRATE);
@@ -171,12 +171,6 @@ void setup() {
     // Setup GPIO
     //gpioSetup();
 
-    if(EEPROM.read(3)){
-      irsend.sendNEC(16203967, 32);
-    }else{
-      irsend.sendNEC(16236607, 32);
-    }
-    
     //setup DHT sensor
     dht.begin();
     
@@ -195,7 +189,6 @@ void setup() {
         String device = String(device_name);
         Serial.printf("[MAIN] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
         if(device.equals("desk light")){
-          writeFlash(3,!state);
           //digitalWrite(LED, !state);
           if(state){
             irsend.sendNEC(16236607, 32);
