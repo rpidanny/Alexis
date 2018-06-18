@@ -16,6 +16,7 @@ before_install:
   - arduino --pref "boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json" --save-prefs
   - arduino --install-boards esp8266:esp8266
   - arduino --board $BD_ESP8266 --save-prefs
+  - arduino --install-library WiFiManager --save-prefs
   - wget --quiet https://github.com/me-no-dev/ESPAsyncTCP/archive/master.zip
   - wget --quiet https://bitbucket.org/xoseperez/fauxmoesp/get/2.4.2.tar.gz
   - tar xf 2.4.2.tar.gz
