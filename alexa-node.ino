@@ -1,3 +1,4 @@
+#include "NetworkManager.h"
 #include <fauxmoESP.h>
 
 fauxmoESP fauxmo;
@@ -7,7 +8,8 @@ void setup() {
     Serial.begin(115200);
 
     // ... connect to wifi ...
-
+    Network.begin();
+    
     fauxmo.addDevice("light one");
     fauxmo.addDevice("light two");
     fauxmo.addDevice("light three");
