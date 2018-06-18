@@ -1,4 +1,5 @@
 #include "NetworkManager.h"
+#include "OTAManager.h"
 #include <fauxmoESP.h>
 
 fauxmoESP fauxmo;
@@ -9,6 +10,7 @@ void setup() {
 
     // ... connect to wifi ...
     Network.begin();
+    Ota.begin();
     
     fauxmo.addDevice("light one");
     fauxmo.addDevice("light two");
@@ -27,4 +29,5 @@ void setup() {
 
 void loop() {
     fauxmo.handle();
+    Ota.handle();
 }
