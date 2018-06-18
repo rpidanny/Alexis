@@ -5,11 +5,12 @@
 void setup() {
 
     Serial.begin(115200);
-
-    // ... connect to wifi ...
     Network.begin();
     Ota.begin();
     DM.begin();
+    DM.addDevice(D4, "light");
+    DM.addDevice(D5, "laptop");
+    DM.printDevices();
     
 }
 
