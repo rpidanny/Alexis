@@ -6,7 +6,8 @@
   - [ ] Save Devices to EEPROM
   - [ ] Load Devices from EEPROM
   - [ ] Hook Devices with fauxmo
-  - [ ] HTTP Server
+  - [ ] Configure Mode (Button Press or something else?)
+  - [ ] HTTP Server for Configuration
     - [ ] List Devices
     - [ ] Add Device
     - [ ] Remove Device
