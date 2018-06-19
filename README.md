@@ -17,3 +17,7 @@
     - [x] Remove Device
     - [x] Reset
     - [ ] Edit Device ?
+
+## License
+
+This project is licensed under the MIT License - see the [license file](LICENSE) file for details
