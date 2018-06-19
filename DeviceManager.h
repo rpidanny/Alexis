@@ -5,9 +5,13 @@
 #include <EEPROM.h>
 #include <ESP8266WebServer.h>
 
+#ifndef NAME_LENGTH
+  #define NAME_LENGTH 20
+#endif
+#ifndef MAX_DEVICES
+  #define MAX_DEVICES 5
+#endif
 #define DEVICE_COUNT_ADDR 0  // address 0 of EEPROM
-#define MAX_DEVICES 5
-#define NAME_LENGTH 20
 #define SIZE sizeof(Device) * MAX_DEVICES // Maxing at 5 devices for now
 
 typedef struct {
