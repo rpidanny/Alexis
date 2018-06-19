@@ -161,7 +161,7 @@ void DeviceManager::addDeviceHander() {
     }
   else {
     if (addDevice(server.arg("pin").toInt(), server.arg("name").c_str())) {
-      server.sendHeader("Location", String("/"), true);
+      server.sendHeader("Location", String("/devices"), true);
       server.send ( 302, "text/plain", "");
     }
     else
