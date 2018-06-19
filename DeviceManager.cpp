@@ -74,7 +74,7 @@ void DeviceManager::writeROM(uint8_t addr, uint8_t data) {
 }
 
 bool DeviceManager::addDevice(uint8_t pin, const char * name) {
-  if (_deviceCount < MAX_DEVICES && getDeviceIndex(name) == -1) {
+  if (_deviceCount < MAX_DEVICES && getDeviceIndex(name) == -1 && getDeviceIndex(pin) == -1) {
     pinMode(pin, OUTPUT);
     Device d;
     d.pin = pin;
@@ -129,6 +129,17 @@ int8_t DeviceManager::getDeviceIndex(const char * name) {
   int8_t index = -1;
   for (uint8_t i = 0; i < _deviceCount; i++) {
     if (strcmp(_devices[i].name, name) == 0) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
+int8_t DeviceManager::getDeviceIndex(uint8_t pin) {
+  int8_t index = -1;
+  for (uint8_t i = 0; i < _deviceCount; i++) {
+    if (_devices[i].pin == pin) {
       index = i;
       break;
     }

@@ -52,6 +52,7 @@ class DeviceManager {
     uint8_t readROM(uint8_t addr);
     void writeROM(uint8_t addr, uint8_t data);
     int8_t getDeviceIndex(const char * name);
+    int8_t getDeviceIndex(uint8_t pin);
 
     void startConfigServer();
 
@@ -68,9 +69,9 @@ class DeviceManager {
     bool _debug = true;
     bool _config = false;
     long _buttonTimer = 0;
-
     uint8_t _deviceCount;
     String _apName;
+
     Device _devices[MAX_DEVICES];
     fauxmoESP fauxmo;
     ESP8266WebServer server;
