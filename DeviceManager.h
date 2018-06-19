@@ -19,7 +19,7 @@ const char HTML_HEAD[] PROGMEM            = "<!DOCTYPE html><html lang=\"en\"><h
 const char HTML_STYLE[] PROGMEM           = "<style>body{text-align: center;font-family:verdana;} button{border:0;border-radius:0.3rem;background-color:#1fa3ec;color:#fff;line-height:2.4rem;font-size:1.2rem;width:100%;} * { box-sizing: border-box; } ul { list-style-type: none; padding: 0; margin: 0; } ul li { border: 1px solid #ddd; margin-top: -1px; background-color: #f6f6f6; padding: 12px; text-decoration: none; font-size: 18px; color: black; display: block; position: relative; } ul li:hover { background-color: #eee; } .close { cursor: pointer; position: absolute; top: 50%; right: 0%; padding: 12px 16px; transform: translate(0%, -50%); color: red;} .close:hover {background: #bbb;} .addDevice { border: 1px solid #ddd; margin-top: -1px; }</style>";
 const char HTML_SCRIPT[] PROGMEM          = "<script>var closebtns = document.getElementsByClassName(\"close\"); var i; for (i = 0; i < closebtns.length; i++) { closebtns[i].addEventListener(\"click\", function() { this.parentElement.style.display = 'none'; }); }</script>";
 const char HTML_HEAD_END[] PROGMEM        = "</head><body><div style='text-align:left;display:inline-block;min-width:260px;'>";
-const char HTML_PORTAL_OPTIONS[] PROGMEM  = "<form action=\"/devices\" method=\"get\"><button>List Devices</button></form><br/><form action=\"/info\" method=\"get\"><button>Device Info</button></form><br/><form action=\"/clear\" method=\"get\"><button>Reset Device</button></form>";
+const char HTML_PORTAL_OPTIONS[] PROGMEM  = "<form action=\"/devices\" method=\"get\"><button>Devices</button></form><br/><form action=\"/info\" method=\"get\"><button>System Info</button></form><br/><form action=\"/clear\" method=\"get\"><button>Reset</button></form>";
 const char HTML_FORM_ADD_DEV[] PROGMEM     = "<form action=\"/add\" method='post' ><input name='name' length=20 placeholder='Device Name'><br/><input name='pin' length=4 type='number' placeholder='Pin Number'><br/>";
 const char HTML_FORM_END[] PROGMEM        = "<br/><button type='submit'>save</button></form>";
 const char HTML_DEVICE_LIST[] PROGMEM      = "<li><span class=\"deviceName\">{d}</span> : {p} <span class=\"close\">x</span></li>";
@@ -53,6 +53,7 @@ class DeviceManager {
     void listDevicesHandler();
     void rootHandler();
     void infoHandler();
+    void notFoundHander();
 
     bool _debug = true;
     uint8_t _deviceCount;

@@ -107,25 +107,9 @@ void DeviceManager::setupServer() {
   server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
 
   server.on("/add", HTTP_POST, std::bind(&DeviceManager::addDeviceHander, this));
-  server.onNotFound([]() {
-    String message = "File Not Found\n\n";
-    message += "URI: ";
-    message += DM.server.uri();
-    message += "\nMethod: ";
-    message += (DM.server.method() == HTTP_GET) ? "GET" : "POST";
-    message += "\nArguments: ";
-    message += DM.server.args();
-    message += "\n";
-
-    for (uint8_t i = 0; i < DM.server.args(); i++) {
-      message += " " + DM.server.argName(i) + ": " + DM.server.arg(i) + "\n";
-    }
-
-    DM.server.send(404, "text/plain", message);
-  });
+  server.onNotFound(std::bind(&DeviceManager::notFoundHander, this));
 
   server.begin();
-
   Serial.println("HTTP Server Started");
 }
 
@@ -139,9 +123,8 @@ void DeviceManager::infoHandler() {
   page.replace("{v}", "Info");
   page += FPSTR(HTML_SCRIPT);
   page += FPSTR(HTML_STYLE);
-  // page += _customHeadElement;
   page += FPSTR(HTML_HEAD_END);
-  page += F("<h3>Device Info</h3>");
+  page += F("<h3>System Info</h3>");
   page += F("<ul>");
   page += F("<li>Chip ID: ");
   page += ESP.getChipId();
@@ -181,7 +164,6 @@ void DeviceManager::addDeviceHander() {
       server.sendHeader("Location", String("/"), true);
       server.send ( 302, "text/plain", "");
     }
-      // server.send(200, "text/plain", "Device Added");
     else
       server.send(500, "text/plain", "500: Can't Add Device");
   }
@@ -189,7 +171,6 @@ void DeviceManager::addDeviceHander() {
 
 void DeviceManager::clearDevicesHandler() {
   clearDevices();
-  // server.send(200, "text/plain", String(_deviceCount));
   server.sendHeader("Location", String("/"), true);
   server.send ( 302, "text/plain", "");
 }
@@ -197,7 +178,6 @@ void DeviceManager::clearDevicesHandler() {
 void DeviceManager::listDevicesHandler() {
   DEBUG_DM("Devices handler");
   String _customHeadElement = "";
-  // char temp[100];
   
   String page = FPSTR(HTML_HEAD);
   page.replace("{v}", "Devices");
@@ -206,12 +186,8 @@ void DeviceManager::listDevicesHandler() {
   page += _customHeadElement;
   page += FPSTR(HTML_HEAD_END);
   page += F("<h3>Devices</h3>");
-  // page += "<h1>";
-  // page += _apName;
-  // page += "</h1>";
-  // page += FPSTR(HTML_PORTAL_OPTIONS);
   page += "<div> <ul>";
-  for (uint8_t i = 0; i < DM._deviceCount; i++) {
+  for (uint8_t i = 0; i < _deviceCount; i++) {
     String temp = FPSTR(HTML_DEVICE_LIST);
     temp.replace("{d}", _devices[i].name);
     temp.replace("{p}", String(_devices[i].pin));
@@ -231,15 +207,19 @@ void DeviceManager::rootHandler() {
   DEBUG_DM("Root handler");
   
   String page = FPSTR(HTML_HEAD);
-  page.replace("{v}", "Devices");
+  page.replace("{v}", "Configuration");
   page += FPSTR(HTML_SCRIPT);
   page += FPSTR(HTML_STYLE);
   page += FPSTR(HTML_HEAD_END);
-  page += F("<h3>Alexa Node</h3>");
+  page += F("<h3>Configuration</h3>");
   page += FPSTR(HTML_PORTAL_OPTIONS);
   page += FPSTR(HTML_END);
 
   server.send(200, "text/html", page);
+}
+
+void DeviceManager::notFoundHander() {
+  server.send(404, "text/plain", "404: Hmm, looks like that page doesn't exist");
 }
 
 DeviceManager DM;
