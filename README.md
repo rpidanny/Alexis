@@ -10,7 +10,8 @@
   - [ ] Hook Devices with fauxmo
   - [ ] Configure Mode (Button Press or something else?)
   - [ ] HTTP Server for Configuration
-    - [ ] List Devices
+    - [x] List Devices
     - [ ] Add Device
     - [ ] Remove Device
+    - [x] Reset
     - [ ] Edit Device ?
