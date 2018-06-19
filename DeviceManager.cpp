@@ -171,7 +171,6 @@ void DeviceManager::infoHandler() {
 
   String page = FPSTR(HTML_HEAD);
   page.replace("{v}", "Info");
-  page += FPSTR(HTML_SCRIPT);
   page += FPSTR(HTML_STYLE);
   page += FPSTR(HTML_HEAD_END);
   page += F("<h3>System Info</h3>");
@@ -241,7 +240,7 @@ void DeviceManager::listDevicesHandler() {
   
   String page = FPSTR(HTML_HEAD);
   page.replace("{v}", "Devices");
-  page += FPSTR(HTML_SCRIPT);
+  page += FPSTR(HTML_DEVICES_SCRIPT);
   page += FPSTR(HTML_STYLE);
   page += _customHeadElement;
   page += FPSTR(HTML_HEAD_END);
@@ -271,7 +270,6 @@ void DeviceManager::rootHandler() {
   
   String page = FPSTR(HTML_HEAD);
   page.replace("{v}", "Configuration");
-  page += FPSTR(HTML_SCRIPT);
   page += FPSTR(HTML_STYLE);
   page += FPSTR(HTML_HEAD_END);
   page += F("<h3>Configuration</h3>");
