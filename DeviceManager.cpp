@@ -1,5 +1,12 @@
 #include "DeviceManager.h"
 
+void DeviceManager::DEBUG_DM(String msg) {
+  if (_debug) {
+    Serial.print("*DM: ");
+    Serial.println(msg);
+  }
+}
+
 void DeviceManager::begin() {
   EEPROM.begin(SIZE);
   _deviceCount = readROM(DEVICE_COUNT_ADDR);
@@ -28,7 +35,7 @@ void DeviceManager::begin() {
   // fauxmo.onGetState([](unsigned char device_id, const char * device_name) {
   //     return true; // whatever the state of the device is
   // });
-
+  _apName = WiFi.SSID();
   setupServer();
 }
 
@@ -94,23 +101,12 @@ bool DeviceManager::deviceExists(const char * name) {
 }
 
 void DeviceManager::setupServer() {
-  server.on("/", [](){
-    Serial.println("Main hander");
-    String out = "";
-    char temp[100];
-    out += "<html> <head> <title> AlexaNode </title></head> <body> <h2> Available Devices </h2> <br /> <ul>";
-    for (uint8_t i = 0; i < DM._deviceCount; i++) {
-      sprintf(temp, "<li>\"%s\" on PIN: \"%d\"</li>", DM._devices[i].name, DM._devices[i].pin);
-      out += temp;
-    }
-    out += "</ul></body></html>";
-    DM.server.send(200, "text/html", out);
-  });
-
+  server.on("/", HTTP_GET, std::bind(&DeviceManager::rootHandler, this));
   server.on("/clear", HTTP_GET, std::bind(&DeviceManager::clearDevicesHandler, this));
+  server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));
+  server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
 
   server.on("/add", HTTP_POST, std::bind(&DeviceManager::addDeviceHander, this));
-  
   server.onNotFound([]() {
     String message = "File Not Found\n\n";
     message += "URI: ";
@@ -134,14 +130,58 @@ void DeviceManager::setupServer() {
 }
 
 // requestHandlers
+
+/** Handle the info page */
+void DeviceManager::infoHandler() {
+  DEBUG_DM(F("Info Handler"));
+
+  String page = FPSTR(HTML_HEAD);
+  page.replace("{v}", "Info");
+  page += FPSTR(HTML_SCRIPT);
+  page += FPSTR(HTML_STYLE);
+  // page += _customHeadElement;
+  page += FPSTR(HTML_HEAD_END);
+  page += F("<h3>Device Info</h3>");
+  page += F("<ul>");
+  page += F("<li>Chip ID: ");
+  page += ESP.getChipId();
+  page += F("</li>");
+  page += F("<li>Flash Chip ID: ");
+  page += ESP.getFlashChipId();
+  page += F("</li>");
+  page += F("<li>IDE Flash Size:  ");
+  page += ESP.getFlashChipSize();
+  page += F(" bytes</li>");
+  page += F("<li>Real Flash Size: ");
+  page += ESP.getFlashChipRealSize();
+  page += F(" bytes</li>");
+  page += F("<li>Device IP: ");
+  page += WiFi.localIP().toString();
+  page += F("</li>");
+  page += F("<li>Soft AP MAC: ");
+  page += WiFi.softAPmacAddress();
+  page += F("</li>");
+  page += F("<li>Station MAC: ");
+  page += WiFi.macAddress();
+  page += F("</li>");
+  page += F("</ul>");
+  page += FPSTR(HTML_BACK);
+  page += FPSTR(HTML_END);
+
+  server.send(200, "text/html", page);
+}
+
 void DeviceManager::addDeviceHander() {
   if (!server.hasArg("pin") || !server.hasArg("name")
     || server.arg("pin") == NULL || server.arg("name") == NULL) {
       server.send(400, "text/plain", "400: Invalid Request");
     }
   else {
-    if (addDevice(server.arg("pin").toInt(), server.arg("name").c_str()))
-      server.send(200, "text/plain", "Device Added");
+    if (addDevice(server.arg("pin").toInt(), server.arg("name").c_str())) {
+      server.sendHeader("Location", String("/"), true);
+      server.send ( 302, "text/plain", "");
+    }
+      // server.send(200, "text/plain", "Device Added");
     else
       server.send(500, "text/plain", "500: Can't Add Device");
   }
@@ -149,7 +189,57 @@ void DeviceManager::addDeviceHander() {
 
 void DeviceManager::clearDevicesHandler() {
   clearDevices();
-  server.send(200, "text/plain", String(_deviceCount));
+  // server.send(200, "text/plain", String(_deviceCount));
+  server.sendHeader("Location", String("/"), true);
+  server.send ( 302, "text/plain", "");
+}
+
+void DeviceManager::listDevicesHandler() {
+  DEBUG_DM("Devices handler");
+  String _customHeadElement = "";
+  // char temp[100];
+  
+  String page = FPSTR(HTML_HEAD);
+  page.replace("{v}", "Devices");
+  page += FPSTR(HTML_SCRIPT);
+  page += FPSTR(HTML_STYLE);
+  page += _customHeadElement;
+  page += FPSTR(HTML_HEAD_END);
+  page += F("<h3>Devices</h3>");
+  // page += "<h1>";
+  // page += _apName;
+  // page += "</h1>";
+  // page += FPSTR(HTML_PORTAL_OPTIONS);
+  page += "<div> <ul>";
+  for (uint8_t i = 0; i < DM._deviceCount; i++) {
+    String temp = FPSTR(HTML_DEVICE_LIST);
+    temp.replace("{d}", _devices[i].name);
+    temp.replace("{p}", String(_devices[i].pin));
+    page += temp;
+  }
+  page += "<br/><div class=\"addDevice\">";
+  page += FPSTR(HTML_FORM_ADD_DEV);
+  page += FPSTR(HTML_FORM_END);
+  page += "</div>";
+  page += FPSTR(HTML_BACK);
+  page += FPSTR(HTML_END);
+
+  server.send(200, "text/html", page);
+}
+
+void DeviceManager::rootHandler() {
+  DEBUG_DM("Root handler");
+  
+  String page = FPSTR(HTML_HEAD);
+  page.replace("{v}", "Devices");
+  page += FPSTR(HTML_SCRIPT);
+  page += FPSTR(HTML_STYLE);
+  page += FPSTR(HTML_HEAD_END);
+  page += F("<h3>Alexa Node</h3>");
+  page += FPSTR(HTML_PORTAL_OPTIONS);
+  page += FPSTR(HTML_END);
+
+  server.send(200, "text/html", page);
 }
 
 DeviceManager DM;
