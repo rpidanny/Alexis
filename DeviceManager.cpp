@@ -54,7 +54,7 @@ void DeviceManager::writeROM(uint8_t addr, uint8_t data) {
 }
 
 bool DeviceManager::addDevice(uint8_t pin, const char * name) {
-  if (_deviceCount < MAX_DEVICES && !deviceExists(name)) {
+  if (_deviceCount < MAX_DEVICES && getDeviceIndex(name) == -1) {
     pinMode(pin, OUTPUT);
     Device d;
     d.pin = pin;
@@ -84,25 +84,42 @@ void DeviceManager::printDevices() {
   }
 }
 
-void DeviceManager::clearDevices() {
-  writeROM(DEVICE_COUNT_ADDR, 0);
-  _deviceCount = 0;
+void DeviceManager::delDevice(const char * name) {
+  if (name == NULL) {
+    DEBUG_DM("NULL");
+    // remove all devices
+    writeROM(DEVICE_COUNT_ADDR, 0);
+    _deviceCount = 0;
+  } else {
+    DEBUG_DM(name);
+    uint8_t idx = getDeviceIndex(name);
+    if (idx > -1) {
+      for (uint8_t i = idx; i < _deviceCount; i++) {
+        Device d = _devices[i+1];
+        _devices[i] = d;
+        EEPROM.put(i * sizeof(Device) + 1, d);
+        EEPROM.commit();
+      }
+      _deviceCount--;
+      writeROM(DEVICE_COUNT_ADDR, _deviceCount);
+    }
+  }
 }
 
-bool DeviceManager::deviceExists(const char * name) {
-  bool flag = false;
+int8_t DeviceManager::getDeviceIndex(const char * name) {
+  int8_t index = -1;
   for (uint8_t i = 0; i < _deviceCount; i++) {
     if (strcmp(_devices[i].name, name) == 0) {
-      flag = true;
+      index = i;
       break;
     }
   }
-  return flag;
+  return index;
 }
 
 void DeviceManager::setupServer() {
   server.on("/", HTTP_GET, std::bind(&DeviceManager::rootHandler, this));
-  server.on("/clear", HTTP_GET, std::bind(&DeviceManager::clearDevicesHandler, this));
+  server.on("/del", HTTP_GET, std::bind(&DeviceManager::clearDevicesHandler, this));
   server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));
   server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
 
@@ -170,9 +187,23 @@ void DeviceManager::addDeviceHander() {
 }
 
 void DeviceManager::clearDevicesHandler() {
-  clearDevices();
-  server.sendHeader("Location", String("/"), true);
+  // clearDevices();
+  // server.sendHeader("Location", String("/"), true);
+  // server.send ( 302, "text/plain", "");
+  if (server.hasArg("name")) {
+    delDevice(server.arg("name").c_str());
+  } else {
+    delDevice();
+  }
+  server.sendHeader("Location", String("/devices"), true);
   server.send ( 302, "text/plain", "");
+  // String message = "";
+  // for (int i = 0; i < server.args(); i++) {
+  //   message += "Arg" + String(i) + " –> ";
+  //   message += server.argName(i) + ": ";
+  //   message += server.arg(i) + "\n";
+  // } 
+  // server.send(200, "text/plain", message);
 }
 
 void DeviceManager::listDevicesHandler() {
@@ -193,10 +224,13 @@ void DeviceManager::listDevicesHandler() {
     temp.replace("{p}", String(_devices[i].pin));
     page += temp;
   }
-  page += "<br/><div class=\"addDevice\">";
-  page += FPSTR(HTML_FORM_ADD_DEV);
-  page += FPSTR(HTML_FORM_END);
-  page += "</div>";
+  // Dont allow device additon if max devices reached
+  if (_deviceCount < MAX_DEVICES) {
+    page += "<br/><div class=\"addDevice\">";
+    page += FPSTR(HTML_FORM_ADD_DEV);
+    page += FPSTR(HTML_FORM_END);
+    page += "</div>";
+  }
   page += FPSTR(HTML_BACK);
   page += FPSTR(HTML_END);
 
