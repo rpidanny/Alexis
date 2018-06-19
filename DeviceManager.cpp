@@ -26,6 +26,8 @@ void DeviceManager::begin() {
       Device d;
       EEPROM.get((i * sizeof(Device)) + 1, d);
       _devices[i] = d;
+      pinMode(d.pin, OUTPUT);
+      digitalWrite(d.pin, d.state);
       fauxmo.addDevice(d.name); 
     }
     fauxmo.enable(true);
