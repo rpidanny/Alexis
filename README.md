@@ -8,6 +8,8 @@
   - [x] Save Devices to EEPROM
   - [x] Load Devices from EEPROM
   - [ ] Hook Devices with fauxmo
+    - [x] Add Devices
+    - [ ] Hook GPIO to State Change
   - [x] Configure Mode (Button Press or something else?)
   - [ ] HTTP Server for Configuration
     - [x] List Devices
