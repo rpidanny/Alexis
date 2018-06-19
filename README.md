@@ -11,7 +11,7 @@
   - [ ] Configure Mode (Button Press or something else?)
   - [ ] HTTP Server for Configuration
     - [x] List Devices
-    - [ ] Add Device
-    - [ ] Remove Device
+    - [x] Add Device
+    - [x] Remove Device
     - [x] Reset
     - [ ] Edit Device ?
