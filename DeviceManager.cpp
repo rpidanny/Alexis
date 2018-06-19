@@ -143,6 +143,7 @@ void DeviceManager::startConfigServer() {
   server.on("/del", HTTP_GET, std::bind(&DeviceManager::delDevicesHandler, this));
   server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));
   server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
+  server.on("/rs", HTTP_GET, std::bind(&DeviceManager::restartHander, this));
 
   server.on("/add", HTTP_POST, std::bind(&DeviceManager::addDeviceHander, this));
   server.onNotFound(std::bind(&DeviceManager::notFoundHander, this));
@@ -273,6 +274,15 @@ void DeviceManager::notFoundHander() {
   DEBUG_DM("[Handler] Not Found");
 
   server.send(404, "text/plain", "404: Hmm, looks like that page doesn't exist");
+}
+
+void DeviceManager::restartHander() {
+  String page = FPSTR(HTML_REDIRECT);
+  page.replace("{v}", "Restarting....");
+  DM.server.send ( 200, "text/html", page);
+  // wait for server to send HTTP respose before restarting
+  delay(500);
+  ESP.restart();
 }
 
 DeviceManager DM;

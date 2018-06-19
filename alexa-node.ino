@@ -8,8 +8,9 @@ void setup() {
     Network.begin();
     Ota.begin();
     DM.begin();
-    DM.addDevice(D4, "light");
-    DM.addDevice(D5, "laptop");
+    // Devices can be added from config page
+//    DM.addDevice(D4, "light");
+//    DM.addDevice(D5, "laptop");
     DM.printDevices();
     
 }
