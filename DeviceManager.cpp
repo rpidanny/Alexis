@@ -26,8 +26,16 @@ void DeviceManager::begin() {
       Device d;
       EEPROM.get((i * sizeof(Device)) + 1, d);
       _devices[i] = d;
-      // TODO: add devices to Fauxmo
+      fauxmo.addDevice(d.name); 
     }
+    fauxmo.enable(true);
+    // TODO: GPIO controls
+    fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state) {
+        Serial.printf("[fauxmo] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
+    });
+    fauxmo.onGetState([](unsigned char device_id, const char * device_name) {
+        return true; // whatever the state of the device is
+    });
   }
 
   // fauxmo.addDevice("light one");
@@ -46,7 +54,7 @@ void DeviceManager::begin() {
 }
 
 void DeviceManager::handle() {
-  // fauxmo.handle();
+  fauxmo.handle();
   if (_config)
     server.handleClient();
 
