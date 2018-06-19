@@ -92,7 +92,7 @@ void DeviceManager::delDevice(const char * name) {
     _deviceCount = 0;
   } else {
     DEBUG_DM(name);
-    uint8_t idx = getDeviceIndex(name);
+    int8_t idx = getDeviceIndex(name);
     if (idx > -1) {
       for (uint8_t i = idx; i < _deviceCount; i++) {
         Device d = _devices[i+1];
