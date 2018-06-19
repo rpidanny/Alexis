@@ -14,15 +14,19 @@ void DeviceManager::begin() {
     // reset to 0
     writeROM(DEVICE_COUNT_ADDR, 0);
     _deviceCount = 0;
+  } else if (_deviceCount == 0) {
+    // enter configuration mode
+    startConfigServer();
+  } else {
+    // Load devices from EEPROM
+    for (uint8_t i = 0; i < _deviceCount; i++) {
+      Device d;
+      EEPROM.get((i * sizeof(Device)) + 1, d);
+      _devices[i] = d;
+      // TODO: add devices to Fauxmo
+    }
   }
 
-  // Load devices from EEPROM
-  for (uint8_t i = 0; i < _deviceCount; i++) {
-    Device d;
-    EEPROM.get((i * sizeof(Device)) + 1, d);
-    _devices[i] = d;
-    // TODO: add devices to Fauxmo
-  }
   // fauxmo.addDevice("light one");
   // fauxmo.addDevice("light two");
   // fauxmo.addDevice("light three");
@@ -36,12 +40,13 @@ void DeviceManager::begin() {
   //     return true; // whatever the state of the device is
   // });
   _apName = WiFi.SSID();
-  setupServer();
 }
 
 void DeviceManager::handle() {
   fauxmo.handle();
   server.handleClient();
+
+  // TODO: start config server on long btn press
 }
 
 uint8_t DeviceManager::readROM(uint8_t addr) {
@@ -116,7 +121,9 @@ int8_t DeviceManager::getDeviceIndex(const char * name) {
   return index;
 }
 
-void DeviceManager::setupServer() {
+void DeviceManager::startConfigServer() {
+  DEBUG_DM("Starting Configuration Server");
+
   server.on("/", HTTP_GET, std::bind(&DeviceManager::rootHandler, this));
   server.on("/del", HTTP_GET, std::bind(&DeviceManager::delDevicesHandler, this));
   server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));

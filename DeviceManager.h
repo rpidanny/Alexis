@@ -45,7 +45,8 @@ class DeviceManager {
     void writeROM(uint8_t addr, uint8_t data);
     int8_t getDeviceIndex(const char * name);
 
-    void setupServer();
+    void startConfigServer();
+
     // requestHandlers
     void addDeviceHander();
     void addDevicePageHander();
