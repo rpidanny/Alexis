@@ -49,7 +49,7 @@ class DeviceManager {
     // requestHandlers
     void addDeviceHander();
     void addDevicePageHander();
-    void clearDevicesHandler();
+    void delDevicesHandler();
     void listDevicesHandler();
     void rootHandler();
     void infoHandler();

@@ -68,19 +68,17 @@ bool DeviceManager::addDevice(uint8_t pin, const char * name) {
     EEPROM.commit();
     _deviceCount++;
     writeROM(DEVICE_COUNT_ADDR, _deviceCount);
+    DEBUG_DM(String(name) + " Added");
     return true;
   }
   return false;
 }
 
 void DeviceManager::printDevices() {
+  DEBUG_DM("Saved Devices:");
   for (uint8_t i = 0; i < _deviceCount; i++) {
     Device d = _devices[i];
-    Serial.print(i);
-    Serial.print("-->");
-    Serial.print(d.pin);
-    Serial.print(" : ");
-    Serial.println(d.name);
+    DEBUG_DM("[" + String(i) + "] " + String(d.name) + " : " + String(d.pin));
   }
 }
 
@@ -102,6 +100,7 @@ void DeviceManager::delDevice(const char * name) {
       }
       _deviceCount--;
       writeROM(DEVICE_COUNT_ADDR, _deviceCount);
+      DEBUG_DM(String(name) + " Deleted");
     }
   }
 }
@@ -119,7 +118,7 @@ int8_t DeviceManager::getDeviceIndex(const char * name) {
 
 void DeviceManager::setupServer() {
   server.on("/", HTTP_GET, std::bind(&DeviceManager::rootHandler, this));
-  server.on("/del", HTTP_GET, std::bind(&DeviceManager::clearDevicesHandler, this));
+  server.on("/del", HTTP_GET, std::bind(&DeviceManager::delDevicesHandler, this));
   server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));
   server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
 
@@ -127,14 +126,14 @@ void DeviceManager::setupServer() {
   server.onNotFound(std::bind(&DeviceManager::notFoundHander, this));
 
   server.begin();
-  Serial.println("HTTP Server Started");
+  DEBUG_DM("HTTP Server Started");
 }
 
 // requestHandlers
 
 /** Handle the info page */
 void DeviceManager::infoHandler() {
-  DEBUG_DM(F("Info Handler"));
+  DEBUG_DM("[Handler] Info");
 
   String page = FPSTR(HTML_HEAD);
   page.replace("{v}", "Info");
@@ -172,6 +171,8 @@ void DeviceManager::infoHandler() {
 }
 
 void DeviceManager::addDeviceHander() {
+  DEBUG_DM("[Handler] Add Device");
+
   if (!server.hasArg("pin") || !server.hasArg("name")
     || server.arg("pin") == NULL || server.arg("name") == NULL) {
       server.send(400, "text/plain", "400: Invalid Request");
@@ -186,28 +187,22 @@ void DeviceManager::addDeviceHander() {
   }
 }
 
-void DeviceManager::clearDevicesHandler() {
-  // clearDevices();
-  // server.sendHeader("Location", String("/"), true);
-  // server.send ( 302, "text/plain", "");
+void DeviceManager::delDevicesHandler() {
+  DEBUG_DM("[Handler] Del Device");
+
   if (server.hasArg("name")) {
     delDevice(server.arg("name").c_str());
+    server.sendHeader("Location", String("/devices"), true);
   } else {
     delDevice();
+    server.sendHeader("Location", String("/"), true);
   }
-  server.sendHeader("Location", String("/devices"), true);
   server.send ( 302, "text/plain", "");
-  // String message = "";
-  // for (int i = 0; i < server.args(); i++) {
-  //   message += "Arg" + String(i) + " –> ";
-  //   message += server.argName(i) + ": ";
-  //   message += server.arg(i) + "\n";
-  // } 
-  // server.send(200, "text/plain", message);
 }
 
 void DeviceManager::listDevicesHandler() {
-  DEBUG_DM("Devices handler");
+  DEBUG_DM("[Handler] List Devices");
+
   String _customHeadElement = "";
   
   String page = FPSTR(HTML_HEAD);
@@ -238,7 +233,7 @@ void DeviceManager::listDevicesHandler() {
 }
 
 void DeviceManager::rootHandler() {
-  DEBUG_DM("Root handler");
+  DEBUG_DM("[Handler] Root");
   
   String page = FPSTR(HTML_HEAD);
   page.replace("{v}", "Configuration");
@@ -253,6 +248,8 @@ void DeviceManager::rootHandler() {
 }
 
 void DeviceManager::notFoundHander() {
+  DEBUG_DM("[Handler] Not Found");
+
   server.send(404, "text/plain", "404: Hmm, looks like that page doesn't exist");
 }
 
