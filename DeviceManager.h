@@ -12,6 +12,13 @@
 #ifndef MAX_DEVICES
   #define MAX_DEVICES 5
 #endif
+#ifndef CONFIG_PIN
+  #define CONFIG_PIN D3
+#endif
+#ifndef BTN_PRESS_TIME
+  #define BTN_PRESS_TIME 5000
+#endif
+
 #define DEVICE_COUNT_ADDR 0  // address 0 of EEPROM
 #define SIZE sizeof(Device) * MAX_DEVICES // Maxing at 5 devices for now
 
@@ -58,6 +65,7 @@ class DeviceManager {
 
     bool _debug = true;
     bool _config = false;
+    long _buttonTimer = 0;
 
     uint8_t _deviceCount;
     String _apName;

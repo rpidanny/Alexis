@@ -8,6 +8,7 @@ void DeviceManager::DEBUG_DM(String msg) {
 }
 
 void DeviceManager::begin() {
+  pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
   _deviceCount = readROM(DEVICE_COUNT_ADDR);
   if (_deviceCount > 5 ) {
@@ -50,6 +51,17 @@ void DeviceManager::handle() {
     server.handleClient();
 
   // TODO: start config server on long btn press
+  if (digitalRead(CONFIG_PIN) == LOW) {
+    //Button pressed
+    if (millis() - _buttonTimer > BTN_PRESS_TIME && !_config) {
+      DEBUG_DM("Entering Congiguration Mode");
+      _config = true;
+      startConfigServer();
+    }
+  } else {
+    //Button not pressed
+    _buttonTimer = millis();
+  }
 }
 
 uint8_t DeviceManager::readROM(uint8_t addr) {
