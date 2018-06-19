@@ -57,6 +57,8 @@ class DeviceManager {
     void notFoundHander();
 
     bool _debug = true;
+    bool _config = false;
+
     uint8_t _deviceCount;
     String _apName;
     Device _devices[MAX_DEVICES];

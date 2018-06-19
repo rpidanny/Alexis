@@ -14,8 +14,10 @@ void DeviceManager::begin() {
     // reset to 0
     writeROM(DEVICE_COUNT_ADDR, 0);
     _deviceCount = 0;
-  } else if (_deviceCount == 0) {
+  }
+  if (_deviceCount == 0) {
     // enter configuration mode
+    _config = true;
     startConfigServer();
   } else {
     // Load devices from EEPROM
@@ -43,8 +45,9 @@ void DeviceManager::begin() {
 }
 
 void DeviceManager::handle() {
-  fauxmo.handle();
-  server.handleClient();
+  // fauxmo.handle();
+  if (_config)
+    server.handleClient();
 
   // TODO: start config server on long btn press
 }
