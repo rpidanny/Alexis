@@ -173,27 +173,28 @@ void DeviceManager::infoHandler() {
   page.replace("{v}", "Info");
   page += FPSTR(HTML_STYLE);
   page += FPSTR(HTML_HEAD_END);
-  page += F("<h3>System Info</h3>");
+  page += FPSTR(HTML_HEADER);
+  page.replace("{v}", "System Info");
   page += F("<ul>");
-  page += F("<li>Chip ID: ");
+  page += F("<li><span class=\"name\">Chip ID</span>: ");
   page += ESP.getChipId();
   page += F("</li>");
-  page += F("<li>Flash Chip ID: ");
+  page += F("<li><span class=\"name\">Flash Chip ID</span>: ");
   page += ESP.getFlashChipId();
   page += F("</li>");
-  page += F("<li>IDE Flash Size:  ");
+  page += F("<li><span class=\"name\">IDE Flash Size</span>:  ");
   page += ESP.getFlashChipSize();
   page += F(" bytes</li>");
-  page += F("<li>Real Flash Size: ");
+  page += F("<li><span class=\"name\">Real Flash Size</span>: ");
   page += ESP.getFlashChipRealSize();
   page += F(" bytes</li>");
-  page += F("<li>Device IP: ");
+  page += F("<li><span class=\"name\">Device IP</span>: ");
   page += WiFi.localIP().toString();
   page += F("</li>");
-  page += F("<li>Soft AP MAC: ");
+  page += F("<li><span class=\"name\">Soft AP MAC</span>: ");
   page += WiFi.softAPmacAddress();
   page += F("</li>");
-  page += F("<li>Station MAC: ");
+  page += F("<li><span class=\"name\">Station MAC</span>: ");
   page += WiFi.macAddress();
   page += F("</li>");
   page += F("</ul>");
@@ -245,7 +246,8 @@ void DeviceManager::listDevicesHandler() {
   page += FPSTR(HTML_STYLE);
   page += _customHeadElement;
   page += FPSTR(HTML_HEAD_END);
-  page += F("<h3>Devices</h3>");
+  page += FPSTR(HTML_HEADER);
+  page.replace("{v}", "Devices");
   page += "<div> <ul>";
   for (uint8_t i = 0; i < _deviceCount; i++) {
     String temp = FPSTR(HTML_DEVICE_LIST);
@@ -255,9 +257,9 @@ void DeviceManager::listDevicesHandler() {
   }
   // Dont allow device additon if max devices reached
   if (_deviceCount < MAX_DEVICES) {
-    page += "<br/><div class=\"addDevice\">";
+    page += "<br/><div>";
     page += FPSTR(HTML_FORM_ADD_DEV);
-    page += FPSTR(HTML_FORM_END);
+    page += "</br></br><input type=\"button\" class=\"addDevice\" onClick=\"confSubmit(this.form);\" value=\"Add\" ></form>";
     page += "</div>";
   }
   page += FPSTR(HTML_BACK);
@@ -274,7 +276,8 @@ void DeviceManager::rootHandler() {
   page += FPSTR(HTML_CONFIRM_SCRIPT);;
   page += FPSTR(HTML_STYLE);
   page += FPSTR(HTML_HEAD_END);
-  page += F("<h3>Configuration</h3>");
+  page += FPSTR(HTML_HEADER);
+  page.replace("{v}", "Configuration");
   page += FPSTR(HTML_PORTAL_OPTIONS);
   page += FPSTR(HTML_END);
 
