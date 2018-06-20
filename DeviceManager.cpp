@@ -8,6 +8,12 @@ void DeviceManager::DEBUG_DM(String msg) {
 }
 
 void DeviceManager::begin() {
+  DEBUG_DM("Before callback");
+  Ser.addDevice("Info Handler",[](){
+    DM.DEBUG_DM(F("Prinint from callback: "));
+  });
+  Ser.begin();
+
   pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
   _deviceCount = readROM(DEVICE_COUNT_ADDR);
