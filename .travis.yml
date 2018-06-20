@@ -26,7 +26,7 @@ before_install:
 # install:
 #   - ln -s $PWD /usr/local/share/arduino/libraries/Neo
 script:
-  - arduino --verify --board $BD_ESP8266 $PWD/alexa-node.ino
+  - arduino --verify --board $BD_ESP8266 $PWD/Alexis.ino
 # after_success:
 #   - source <(curl -SLs  https://raw.githubusercontent.com/rpidanny/travis-ci-arduino/master/doxy_gen_and_deploy.sh)
 notifications:
