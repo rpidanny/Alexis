@@ -7,9 +7,15 @@
 - [ ] DeviceManager
   - [x] Save Devices to EEPROM
   - [x] Load Devices from EEPROM
-  - [ ] Hook Devices with fauxmo
-    - [x] Add Devices
-    - [ ] Hook GPIO to State Change
+  - [ ] Controls
+    - [ ] Enable/Disable Services
+    - [ ] Amazon Alexa
+      - [x] Add Devices
+      - [ ] Hook GPIO to State Change
+    - [ ] MQTT
+      - [ ] MQTT configuration
+      - [ ] Hook GPIO to topic
+    - [ ] Timers ?
   - [x] Configure Mode (Button Press or something else?)
   - [ ] HTTP Server for Configuration
     - [x] List Devices
