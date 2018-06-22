@@ -1,16 +1,13 @@
-#include "NetworkManager.h"
-#include "OTAManager.h"
+#include <NetworkManager.h>
 #include "DeviceManager.h"
 
 void setup() {
-
     Serial.begin(115200);
     Network.begin();
-    Ota.begin();
     DM.begin();    
 }
 
 void loop() {
     DM.handle();
-    Ota.handle();
+    Network.handle();
 }

@@ -19,13 +19,19 @@ before_install:
   - arduino --install-library WiFiManager --save-prefs
   - arduino --install-library PubSubClient  --save-prefs
   - wget --quiet https://github.com/me-no-dev/ESPAsyncTCP/archive/master.zip
+  - unzip master.zip && rm master.zip
+  - sudo mv ESPAsyncTCP-master /usr/local/share/arduino/libraries/ESPAsyncTCP
   - wget --quiet https://bitbucket.org/xoseperez/fauxmoesp/get/2.4.2.tar.gz
   - tar xf 2.4.2.tar.gz
-  - unzip master.zip
-  - sudo mv ESPAsyncTCP-master /usr/local/share/arduino/libraries/ESPAsyncTCP
   - sudo mv xoseperez-fauxmoesp-50cbcf3087fd /usr/local/share/arduino/libraries/fauxmoESP
+  - wget https://github.com/rpidanny/NetworkManager/archive/master.zip
+  - unzip master.zip && rm master.zip
+  - sudo mv NetworkManager-master /usr/local/share/arduino/libraries/NetworkManager
 # install:
 #   - ln -s $PWD /usr/local/share/arduino/libraries/Neo
+cache:
+  directories:
+    - /usr/local/share/arduino
 script:
   - arduino --verify --board $BD_ESP8266 $PWD/Alexis.ino
 # after_success:
