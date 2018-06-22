@@ -70,6 +70,10 @@ void DeviceManager::handle() {
   }
 }
 
+void DeviceManager::setDebug(bool flag) {
+  _debug = flag;
+}
+
 uint8_t DeviceManager::readROM(uint8_t addr) {
   return EEPROM.read(addr);
 }
