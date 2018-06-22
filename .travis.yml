@@ -26,6 +26,9 @@ before_install:
   - sudo mv xoseperez-fauxmoesp-50cbcf3087fd /usr/local/share/arduino/libraries/fauxmoESP
 # install:
 #   - ln -s $PWD /usr/local/share/arduino/libraries/Neo
+cache:
+  directories:
+    - /usr/local/share/arduino
 script:
   - arduino --verify --board $BD_ESP8266 $PWD/Alexis.ino
 # after_success:
