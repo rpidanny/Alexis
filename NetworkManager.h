@@ -19,6 +19,7 @@ class NetworkManager {
     void DEBUG_NM(String msg);
 
     bool _debug = true;
+    uint16_t _delay = 3000;
 };
 
 extern NetworkManager Network;

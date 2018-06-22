@@ -13,7 +13,7 @@ void NetworkManager::begin() {
   if (!wifiManager.autoConnect()) {
     DEBUG_NM("Failed to connect..");
     ESP.reset();
-    delay(1000);
+    delay(_delay);
   }
   DEBUG_NM("Connected to " + WiFi.SSID());
 }
