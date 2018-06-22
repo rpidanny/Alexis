@@ -8,6 +8,12 @@
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 
+#define MQTT_RECONNECT 5000
+
+// #ifndef WIFICLIENT
+//   WiFiClient wifiClient;
+// #endif
+
 class Services {
   public:
     Services();
@@ -19,9 +25,12 @@ class Services {
   private:
     void DEBUG_SER(String msg);
     void mqttCallback(char* topic, byte* payload, unsigned int length);
+    void reconnect();
     bool _debug = true;
-
-    PubSubClient client;
+    const char * _chipId;
+    WiFiClient _wifiClient;
+    PubSubClient *_mqttClient;
+    long _lastMillis = 0;
 };
 
 extern Services Ser;

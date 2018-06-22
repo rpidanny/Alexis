@@ -2,7 +2,7 @@
 
 void DeviceManager::DEBUG_DM(String msg) {
   if (_debug) {
-    Serial.print("DM: ");
+    Serial.print("*DM: ");
     Serial.println(msg);
   }
 }
@@ -53,6 +53,7 @@ void DeviceManager::begin() {
 
 void DeviceManager::handle() {
   fauxmo.handle();
+  Ser.handle();
   if (_config)
     server.handleClient();
 
