@@ -14,9 +14,9 @@
 //   WiFiClient wifiClient;
 // #endif
 
-class Services {
+class Controls {
   public:
-    Services();
+    Controls();
     void begin();
     typedef std::function<void(void)> CallbackFunction;
     void addDevice(const char * name, CallbackFunction callback);
@@ -33,6 +33,6 @@ class Services {
     long _lastMillis = 0;
 };
 
-extern Services Ser;
+extern Controls controls;
 
 #endif

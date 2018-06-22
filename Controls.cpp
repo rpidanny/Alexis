@@ -1,18 +1,18 @@
-#include "Services.h"
+#include "Controls.h"
 
-Services::Services() {
+Controls::Controls() {
   _chipId = String("Alexis-" + ESP.getChipId()).c_str();
   _mqttClient = new PubSubClient(_wifiClient);
 }
 
-void Services::DEBUG_SER(String msg) {
+void Controls::DEBUG_SER(String msg) {
   if (_debug) {
     Serial.print("*SE: ");
     Serial.println(msg);
   }
 }
 
-void Services::begin() {
+void Controls::begin() {
   _mqttClient->setServer("192.168.2.12", 1883);
   _mqttClient->setCallback([](char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
@@ -25,12 +25,12 @@ void Services::begin() {
   });
 }
 
-void Services::addDevice(const char * name, CallbackFunction callback) {
+void Controls::addDevice(const char * name, CallbackFunction callback) {
   delay(1000);
   callback();
 }
 
-void Services::mqttCallback(char* topic, byte* payload, unsigned int length) {
+void Controls::mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -40,7 +40,7 @@ void Services::mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
 }
 
-void Services::reconnect() {
+void Controls::reconnect() {
   if (_mqttClient->connect(_chipId)) {
     DEBUG_SER("MQTT Connected");
     _mqttClient->publish("heartbeat", "hello world");
@@ -50,7 +50,7 @@ void Services::reconnect() {
   }
 }
 
-void Services::handle() {
+void Controls::handle() {
   if (!_mqttClient->connected() && (millis() - _lastMillis > MQTT_RECONNECT)) {
     _lastMillis = millis();
     reconnect();
@@ -58,4 +58,4 @@ void Services::handle() {
   _mqttClient->loop();
 }
 
-Services Ser;
+Controls controls;

@@ -9,10 +9,10 @@ void DeviceManager::DEBUG_DM(String msg) {
 
 void DeviceManager::begin() {
   DEBUG_DM("Before callback");
-  Ser.addDevice("Info Handler",[](){
+  controls.addDevice("Info Handler",[](){
     DM.DEBUG_DM(F("Prinint from callback: "));
   });
-  Ser.begin();
+  controls.begin();
 
   pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
@@ -53,7 +53,7 @@ void DeviceManager::begin() {
 
 void DeviceManager::handle() {
   fauxmo.handle();
-  Ser.handle();
+  controls.handle();
   if (_config)
     server.handleClient();
 
