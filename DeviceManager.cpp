@@ -46,6 +46,9 @@ void DeviceManager::begin() {
     });
   }
   _apName = WiFi.SSID();
+  // Print loaded devices
+  if (_debug)
+    DM.printDevices();
 }
 
 void DeviceManager::handle() {
