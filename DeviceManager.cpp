@@ -8,6 +8,12 @@ void DeviceManager::DEBUG_DM(String msg) {
 }
 
 void DeviceManager::begin() {
+  DEBUG_DM("Before callback");
+  Ser.addDevice("Info Handler",[](){
+    DM.DEBUG_DM(F("Prinint from callback: "));
+  });
+  Ser.begin();
+
   pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
   _deviceCount = readROM(DEVICE_COUNT_ADDR);
@@ -40,6 +46,9 @@ void DeviceManager::begin() {
     });
   }
   _apName = WiFi.SSID();
+  // Print loaded devices
+  if (_debug)
+    DM.printDevices();
 }
 
 void DeviceManager::handle() {
@@ -59,6 +68,10 @@ void DeviceManager::handle() {
     //Button not pressed
     _buttonTimer = millis();
   }
+}
+
+void DeviceManager::setDebug(bool flag) {
+  _debug = flag;
 }
 
 uint8_t DeviceManager::readROM(uint8_t addr) {

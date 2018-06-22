@@ -6,6 +6,8 @@
 #include <fauxmoESP.h>
 #include <memory>
 
+#include "Services.h"
+
 #ifndef NAME_LENGTH
   #define NAME_LENGTH 20
 #endif
@@ -49,6 +51,7 @@ class DeviceManager {
     bool addDevice(uint8_t pin, const char * name);
     void printDevices();
     void delDevice(const char * name = NULL);
+    void setDebug(bool flag);
   private:
     void DEBUG_DM(String msg);
     uint8_t readROM(uint8_t addr);
