@@ -16,6 +16,11 @@ void NetworkManager::begin() {
     delay(_delay);
   }
   DEBUG_NM("Connected to " + WiFi.SSID());
+  Ota.begin();
+}
+
+void NetworkManager::handle() {
+  Ota.handle();
 }
 
 NetworkManager Network;
