@@ -8,14 +8,9 @@ void DeviceManager::DEBUG_DM(String msg) {
 }
 
 void DeviceManager::begin() {
-  DEBUG_DM("Before callback");
-  controls.addDevice("Info Handler",[](){
-    DM.DEBUG_DM(F("Prinint from callback: "));
-  });
-  controls.begin();
-
   pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
+
   _deviceCount = readROM(DEVICE_COUNT_ADDR);
   if (_deviceCount > 5 ) {
     // reset to 0
@@ -27,23 +22,14 @@ void DeviceManager::begin() {
     _config = true;
     startConfigServer();
   } else {
+    controls.begin();
     // Load devices from EEPROM
     for (uint8_t i = 0; i < _deviceCount; i++) {
       Device d;
       EEPROM.get((i * sizeof(Device)) + 1, d);
       _devices[i] = d;
-      pinMode(d.pin, OUTPUT);
-      digitalWrite(d.pin, d.state);
-      fauxmo.addDevice(d.name); 
+      controls.addDevice(d);
     }
-    fauxmo.enable(true);
-    // TODO: GPIO controls
-    fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state) {
-        Serial.printf("[fauxmo] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
-    });
-    fauxmo.onGetState([](unsigned char device_id, const char * device_name) {
-        return true; // whatever the state of the device is
-    });
   }
   _apName = WiFi.SSID();
   // Print loaded devices
@@ -52,7 +38,6 @@ void DeviceManager::begin() {
 }
 
 void DeviceManager::handle() {
-  fauxmo.handle();
   controls.handle();
   if (_config)
     server.handleClient();

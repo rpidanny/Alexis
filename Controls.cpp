@@ -23,11 +23,22 @@ void Controls::begin() {
     }
     Serial.println();
   });
+
+  fauxmo.enable(true);
+  // TODO: GPIO controls
+  fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state) {
+      Serial.printf("[fauxmo] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
+  });
+  fauxmo.onGetState([](unsigned char device_id, const char * device_name) {
+      return true; // whatever the state of the device is
+  });
 }
 
-void Controls::addDevice(const char * name, CallbackFunction callback) {
-  delay(1000);
-  callback();
+void Controls::addDevice(Device d) {
+  pinMode(d.pin, OUTPUT);
+  digitalWrite(d.pin, d.state);
+  fauxmo.addDevice(d.name);
+  _mqttClient->subscribe(d.name);
 }
 
 void Controls::mqttCallback(char* topic, byte* payload, unsigned int length) {
@@ -56,6 +67,7 @@ void Controls::handle() {
     reconnect();
   }
   _mqttClient->loop();
+  fauxmo.handle();
 }
 
 Controls controls;
