@@ -2,7 +2,7 @@
 
 void DeviceManager::DEBUG_DM(String msg) {
   if (_debug) {
-    Serial.print("*DM: ");
+    Serial.print("DM: ");
     Serial.println(msg);
   }
 }
