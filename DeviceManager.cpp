@@ -162,6 +162,8 @@ void DeviceManager::startConfigServer() {
   server.on("/rs", HTTP_GET, std::bind(&DeviceManager::restartHander, this));
 
   server.on("/add", HTTP_POST, std::bind(&DeviceManager::addDeviceHander, this));
+  server.on("/c", HTTP_POST, std::bind(&DeviceManager::setControlsHandler, this));
+
   server.onNotFound(std::bind(&DeviceManager::notFoundHander, this));
 
   server.begin();
@@ -228,28 +230,20 @@ void DeviceManager::addDeviceHander() {
 
 void DeviceManager::setControlsHandler() {
   DEBUG_DM("[Handler] Controls");
-
-  if (!server.hasArg("alexa") || !server.hasArg("mqtt")
-    || server.arg("alexa") == NULL || server.arg("mqtt") == NULL) {
-      server.send(400, "text/plain", "400: Invalid Request");
-    }
-  else {
-    // TODO encode values and save to eeprom
-    uint8_t status = readROM(DEVICE_COUNT_ADDR);
-    if (server.arg("alexa").toInt() == 1) {
-      status |= (1UL << 4);
-    } else {
-      status &= ~(1UL << 4);
-    }
-    if (server.arg("mqtt").toInt() == 1) {
-      status |= (1UL << 5);
-    } else {
-      status &= ~(1UL << 5);
-    }
-    writeROM(DEVICE_COUNT_ADDR, status);
-    server.sendHeader("Location", String("/ctrl"), true);
-    server.send ( 302, "text/plain", "");
+  uint8_t status = readROM(DEVICE_COUNT_ADDR);
+  if (server.hasArg("alexa")) {
+    status |= (1UL << 4);
+  } else {
+    status &= ~(1UL << 4);
   }
+  if (server.hasArg("mqtt")) {
+    status |= (1UL << 5);
+  } else {
+    status &= ~(1UL << 5);
+  }
+  writeROM(DEVICE_COUNT_ADDR, status);
+  server.sendHeader("Location", String("/controls"), true);
+  server.send ( 302, "text/plain", "");
 }
 
 void DeviceManager::delDevicesHandler() {
@@ -276,9 +270,19 @@ void DeviceManager::controlsPageHandler() {
   page += FPSTR(HTML_HEADER);
   page.replace("{v}", "Controls");
   page += "<br/><div>";
-    page += FPSTR(HTML_FORM_ADD_DEV);
-    page += "</br></br><input type=\"button\" class=\"addDevice\" onClick=\"confSubmit(this.form);\" value=\"Add\" ></form>";
-    page += "</div>";
+  page += FPSTR(HTML_FORM_CONTROLS);
+  if (_mqtt) {
+    page.replace("{m}", "checked");
+  } else {
+    page.replace("{m}", "");
+  }
+  if (_alexa) {
+    page.replace("{a}", "checked");
+  } else {
+    page.replace("{a}", "");
+  }
+  page += "</br></br><input type=\"button\" class=\"addDevice\" onClick=\"confSubmit(this.form);\" value=\"Update\" ></form>";
+  page += "</div>";
   page += FPSTR(HTML_BACK);
   page += FPSTR(HTML_END);
 
