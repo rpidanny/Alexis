@@ -22,6 +22,8 @@ void DeviceManager::begin() {
     _config = true;
     startConfigServer();
   } else {
+    controls.enableAlexa();
+    controls.enableMQTT("192.168.2.12");
     // Load devices from EEPROM
     for (uint8_t i = 0; i < _deviceCount; i++) {
       Device d;

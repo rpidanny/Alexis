@@ -12,17 +12,29 @@ void Controls::DEBUG_SER(String msg) {
   }
 }
 
+void Controls::enableAlexa() {
+  _alexa = true;
+}
+
+void Controls::enableMQTT(const char * host, int port) {
+  _mqtt = true;
+  _mqttHost = host;
+  _mqttPort = port;
+}
+
 void Controls::begin(Device* devices, uint8_t count) {
   _deviceCount = count;
   for (uint8_t i = 0; i < _deviceCount; i++) {
     _devices[i] = devices[i];
     pinMode(_devices[i].pin, OUTPUT);
     digitalWrite(_devices[i].pin, _devices[i].state);
-    fauxmo.addDevice(_devices[i].name);
-    _mqttClient->subscribe(_devices[i].name);
+    if (_alexa) {
+      fauxmo.addDevice(_devices[i].name);
+      _mqttClient->subscribe(_devices[i].name);
+    }
   } 
 
-  _mqttClient->setServer("192.168.2.12", 1883);
+  _mqttClient->setServer(_mqttHost, _mqttPort);
   _mqttClient->setCallback([](char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -34,25 +46,20 @@ void Controls::begin(Device* devices, uint8_t count) {
     Serial.println();
   });
 
-  fauxmo.enable(true);
-  // TODO: GPIO controls
-  fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state) {
-    Serial.printf("[fauxmo] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
-    controls.setDevice(device_name, state);
-  });
-  fauxmo.onGetState([](unsigned char device_id, const char * device_name) {
-      return true; // whatever the state of the device is
-  });
+  if (_alexa) {
+    fauxmo.enable(true);
+    // TODO: GPIO controls
+    fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state) {
+      Serial.printf("[fauxmo] Device #%d (%s) state: %s\n", device_id, device_name, state ? "ON" : "OFF");
+      controls.setDevice(device_name, state);
+    });
+    fauxmo.onGetState([](unsigned char device_id, const char * device_name) {
+        return true; // whatever the state of the device is
+    });
+  }
 }
 
-void Controls::addDevice(Device d) {
-  pinMode(d.pin, OUTPUT);
-  digitalWrite(d.pin, d.state);
-  fauxmo.addDevice(d.name);
-  _mqttClient->subscribe(d.name);
-}
-
-void Controls::reconnect() {
+void Controls::reconnectMqtt() {
   if (_mqttClient->connect(_chipId)) {
     DEBUG_SER("MQTT Connected");
     _mqttClient->publish("heartbeat", "Client Connected.");
@@ -65,12 +72,16 @@ void Controls::reconnect() {
 }
 
 void Controls::handle() {
-  if (!_mqttClient->connected() && (millis() - _lastMillis > MQTT_RECONNECT)) {
-    _lastMillis = millis();
-    reconnect();
+  if (_mqtt) {
+    if (!_mqttClient->connected() && (millis() - _lastMillis > MQTT_RECONNECT)) {
+      _lastMillis = millis();
+      reconnectMqtt();
+    }
+    _mqttClient->loop();
   }
-  _mqttClient->loop();
-  fauxmo.handle();
+  if (_alexa) {
+    fauxmo.handle();
+  }
 }
 
 void Controls::setDevice(const char * name, bool state) {

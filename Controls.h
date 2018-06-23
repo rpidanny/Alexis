@@ -20,6 +20,8 @@
 class Controls {
   public:
     Controls();
+    void enableMQTT(const char * host, int port = 1883);
+    void enableAlexa();
     void begin(Device* devices, uint8_t count);
     typedef std::function<void(void)> CallbackFunction;
     void handle();
@@ -27,14 +29,17 @@ class Controls {
   private:
     void DEBUG_SER(String msg);
     void mqttCallback(char* topic, byte* payload, unsigned int length);
-    void reconnect();
-    void addDevice(Device d);
+    void reconnectMqtt();
     void setDevice(const char * name, bool state);
 
     bool _debug = true;
+    bool _mqtt = false;
+    bool _alexa = false;
     const char * _chipId;
     long _lastMillis = 0;
     uint8_t _deviceCount = 0;
+    const char * _mqttHost = "192.168.2.12";
+    int _mqttPort = 1883;
 
     WiFiClient _wifiClient;
     PubSubClient *_mqttClient;
