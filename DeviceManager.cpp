@@ -22,14 +22,13 @@ void DeviceManager::begin() {
     _config = true;
     startConfigServer();
   } else {
-    controls.begin();
     // Load devices from EEPROM
     for (uint8_t i = 0; i < _deviceCount; i++) {
       Device d;
       EEPROM.get((i * sizeof(Device)) + 1, d);
       _devices[i] = d;
-      controls.addDevice(d);
     }
+    controls.begin(_devices, _deviceCount);
   }
   _apName = WiFi.SSID();
   // Print loaded devices
