@@ -233,13 +233,17 @@ void DeviceManager::setControlsHandler() {
   uint8_t status = readROM(DEVICE_COUNT_ADDR);
   if (server.hasArg("alexa")) {
     status |= (1UL << 4);
+    _alexa = true;
   } else {
     status &= ~(1UL << 4);
+    _alexa = false;
   }
   if (server.hasArg("mqtt")) {
     status |= (1UL << 5);
+    _mqtt = true;
   } else {
     status &= ~(1UL << 5);
+    _mqtt = false;
   }
   writeROM(DEVICE_COUNT_ADDR, status);
   server.sendHeader("Location", String("/controls"), true);
