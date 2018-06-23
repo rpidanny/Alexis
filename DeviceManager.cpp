@@ -29,7 +29,11 @@ void DeviceManager::begin() {
       controls.enableAlexa();
     }
     if (_mqtt) {
-      controls.enableMQTT("192.168.2.12");
+      MQTT m;
+      m = getMqttConfs();
+      _mqttHost = String(m.host);
+      _mqttPort = m.port;
+      controls.enableMQTT(m.host, m.port);
     }
     // Load devices from EEPROM
     for (uint8_t i = 0; i < _deviceCount; i++) {
@@ -151,6 +155,24 @@ int8_t DeviceManager::getDeviceIndex(uint8_t pin) {
   return index;
 }
 
+void DeviceManager::saveMqttConfs() {
+  MQTT m;
+  m.port = _mqttPort;
+  strcpy(m.host, _mqttHost.c_str());
+  DEBUG_DM(m.host);
+  DEBUG_DM(String(m.port));
+  EEPROM.put(MAX_DEVICES * sizeof(Device) + 1, m);
+  EEPROM.commit();
+}
+
+MQTT DeviceManager::getMqttConfs() {
+  MQTT m;
+  EEPROM.get(MAX_DEVICES * sizeof(Device) + 1, m);
+  DEBUG_DM(m.host);
+  DEBUG_DM(String(m.port));
+  return m;
+}
+
 void DeviceManager::startConfigServer() {
   DEBUG_DM("Starting Configuration Server");
 
@@ -241,6 +263,9 @@ void DeviceManager::setControlsHandler() {
   if (server.hasArg("mqtt")) {
     status |= (1UL << 5);
     _mqtt = true;
+    _mqttHost = server.arg("host");
+    _mqttPort = server.arg("port").toInt();
+    saveMqttConfs();
   } else {
     status &= ~(1UL << 5);
     _mqtt = false;
@@ -285,6 +310,8 @@ void DeviceManager::controlsPageHandler() {
   } else {
     page.replace("{a}", "");
   }
+  page.replace("{hv}", _mqttHost);
+  page.replace("{pv}", String(_mqttPort));
   page += "</br></br><input type=\"button\" class=\"addDevice\" onClick=\"confSubmit(this.form);\" value=\"Update\" ></form>";
   page += "</div>";
   page += FPSTR(HTML_BACK);
