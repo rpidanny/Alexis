@@ -1,9 +1,5 @@
 # Alexis [![Build Status](https://travis-ci.org/rpidanny/Alexis.svg?branch=develop)](https://travis-ci.org/rpidanny/Alexis)
 
-- [x] NetworkManager
-- [ ] OTAManager
-  - [x] Listen for OTA updates
-  - [ ] Auto fetch new updates from URL
 - [ ] DeviceManager
   - [x] Save Devices to EEPROM
   - [x] Load Devices from EEPROM
