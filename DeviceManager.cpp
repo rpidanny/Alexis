@@ -11,8 +11,11 @@ void DeviceManager::begin() {
   pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
 
-  _deviceCount = readROM(DEVICE_COUNT_ADDR);
-  if (_deviceCount > 5 ) {
+  uint8_t status = readROM(DEVICE_COUNT_ADDR);
+  _deviceCount = status & 0x0f;
+  _alexa = (status >> 4) & 0x01;
+  _mqtt = (status >> 5) & 0x01;
+  if (_deviceCount > 5 && _deviceCount < 16) {
     // reset to 0
     writeROM(DEVICE_COUNT_ADDR, 0);
     _deviceCount = 0;
@@ -22,8 +25,12 @@ void DeviceManager::begin() {
     _config = true;
     startConfigServer();
   } else {
-    controls.enableAlexa();
-    controls.enableMQTT("192.168.2.12");
+    if (_alexa) {
+      controls.enableAlexa();
+    }
+    if (_mqtt) {
+      controls.enableMQTT("192.168.2.12");
+    }
     // Load devices from EEPROM
     for (uint8_t i = 0; i < _deviceCount; i++) {
       Device d;
@@ -150,6 +157,7 @@ void DeviceManager::startConfigServer() {
   server.on("/", HTTP_GET, std::bind(&DeviceManager::rootHandler, this));
   server.on("/del", HTTP_GET, std::bind(&DeviceManager::delDevicesHandler, this));
   server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));
+  server.on("/controls", HTTP_GET, std::bind(&DeviceManager::controlsPageHandler, this));
   server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
   server.on("/rs", HTTP_GET, std::bind(&DeviceManager::restartHander, this));
 
@@ -218,6 +226,32 @@ void DeviceManager::addDeviceHander() {
   }
 }
 
+void DeviceManager::setControlsHandler() {
+  DEBUG_DM("[Handler] Controls");
+
+  if (!server.hasArg("alexa") || !server.hasArg("mqtt")
+    || server.arg("alexa") == NULL || server.arg("mqtt") == NULL) {
+      server.send(400, "text/plain", "400: Invalid Request");
+    }
+  else {
+    // TODO encode values and save to eeprom
+    uint8_t status = readROM(DEVICE_COUNT_ADDR);
+    if (server.arg("alexa").toInt() == 1) {
+      status |= (1UL << 4);
+    } else {
+      status &= ~(1UL << 4);
+    }
+    if (server.arg("mqtt").toInt() == 1) {
+      status |= (1UL << 5);
+    } else {
+      status &= ~(1UL << 5);
+    }
+    writeROM(DEVICE_COUNT_ADDR, status);
+    server.sendHeader("Location", String("/ctrl"), true);
+    server.send ( 302, "text/plain", "");
+  }
+}
+
 void DeviceManager::delDevicesHandler() {
   DEBUG_DM("[Handler] Del Device");
 
@@ -229,6 +263,26 @@ void DeviceManager::delDevicesHandler() {
     server.sendHeader("Location", String("/"), true);
   }
   server.send ( 302, "text/plain", "");
+}
+
+void DeviceManager::controlsPageHandler() {
+  DEBUG_DM("[Handler] Controls Page");
+  String page = FPSTR(HTML_HEAD);
+  page.replace("{v}", "Devices");
+  page += FPSTR(HTML_CONFIRM_SCRIPT);;
+  page += FPSTR(HTML_DEVICES_SCRIPT);
+  page += FPSTR(HTML_STYLE);
+  page += FPSTR(HTML_HEAD_END);
+  page += FPSTR(HTML_HEADER);
+  page.replace("{v}", "Controls");
+  page += "<br/><div>";
+    page += FPSTR(HTML_FORM_ADD_DEV);
+    page += "</br></br><input type=\"button\" class=\"addDevice\" onClick=\"confSubmit(this.form);\" value=\"Add\" ></form>";
+    page += "</div>";
+  page += FPSTR(HTML_BACK);
+  page += FPSTR(HTML_END);
+
+  server.send(200, "text/html", page);
 }
 
 void DeviceManager::listDevicesHandler() {
