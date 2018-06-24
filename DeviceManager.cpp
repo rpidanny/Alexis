@@ -163,6 +163,7 @@ void DeviceManager::saveMqttConfs() {
   DEBUG_DM(String(m.port));
   EEPROM.put(MAX_DEVICES * sizeof(Device) + 1, m);
   EEPROM.commit();
+  getMqttConfs();
 }
 
 MQTT DeviceManager::getMqttConfs() {
