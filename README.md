@@ -1,9 +1,5 @@
 # Alexis [![Build Status](https://travis-ci.org/rpidanny/Alexis.svg?branch=develop)](https://travis-ci.org/rpidanny/Alexis)
 
-- [x] NetworkManager
-- [ ] OTAManager
-  - [x] Listen for OTA updates
-  - [ ] Auto fetch new updates from URL
 - [ ] DeviceManager
   - [x] Save Devices to EEPROM
   - [x] Load Devices from EEPROM
@@ -11,10 +7,10 @@
     - [ ] Enable/Disable Services
     - [ ] Amazon Alexa
       - [x] Add Devices
-      - [ ] Hook GPIO to State Change
+      - [x] Hook GPIO to State Change
     - [ ] MQTT
       - [ ] MQTT configuration
-      - [ ] Hook GPIO to topic
+      - [x] Hook GPIO to topic
     - [ ] Timers ?
   - [x] Configure Mode (Button Press or something else?)
   - [ ] HTTP Server for Configuration

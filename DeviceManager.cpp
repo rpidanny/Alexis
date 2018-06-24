@@ -11,8 +11,11 @@ void DeviceManager::begin() {
   pinMode(CONFIG_PIN, INPUT);
   EEPROM.begin(SIZE);
 
-  _deviceCount = readROM(DEVICE_COUNT_ADDR);
-  if (_deviceCount > 5 ) {
+  uint8_t status = readROM(DEVICE_COUNT_ADDR);
+  _deviceCount = status & 0x0f;
+  _alexa = (status >> 4) & 0x01;
+  _mqtt = (status >> 5) & 0x01;
+  if (_deviceCount > 5 && _deviceCount < 16) {
     // reset to 0
     writeROM(DEVICE_COUNT_ADDR, 0);
     _deviceCount = 0;
@@ -22,14 +25,23 @@ void DeviceManager::begin() {
     _config = true;
     startConfigServer();
   } else {
-    controls.begin();
+    if (_alexa) {
+      controls.enableAlexa();
+    }
+    if (_mqtt) {
+      MQTT m;
+      m = getMqttConfs();
+      _mqttHost = String(m.host);
+      _mqttPort = m.port;
+      controls.enableMQTT(m.host, m.port);
+    }
     // Load devices from EEPROM
     for (uint8_t i = 0; i < _deviceCount; i++) {
       Device d;
       EEPROM.get((i * sizeof(Device)) + 1, d);
       _devices[i] = d;
-      controls.addDevice(d);
     }
+    controls.begin(_devices, _deviceCount);
   }
   _apName = WiFi.SSID();
   // Print loaded devices
@@ -143,16 +155,38 @@ int8_t DeviceManager::getDeviceIndex(uint8_t pin) {
   return index;
 }
 
+void DeviceManager::saveMqttConfs() {
+  MQTT m;
+  m.port = _mqttPort;
+  strcpy(m.host, _mqttHost.c_str());
+  DEBUG_DM(m.host);
+  DEBUG_DM(String(m.port));
+  EEPROM.put(MAX_DEVICES * sizeof(Device) + 1, m);
+  EEPROM.commit();
+  getMqttConfs();
+}
+
+MQTT DeviceManager::getMqttConfs() {
+  MQTT m;
+  EEPROM.get(MAX_DEVICES * sizeof(Device) + 1, m);
+  DEBUG_DM(m.host);
+  DEBUG_DM(String(m.port));
+  return m;
+}
+
 void DeviceManager::startConfigServer() {
   DEBUG_DM("Starting Configuration Server");
 
   server.on("/", HTTP_GET, std::bind(&DeviceManager::rootHandler, this));
   server.on("/del", HTTP_GET, std::bind(&DeviceManager::delDevicesHandler, this));
   server.on("/devices", HTTP_GET, std::bind(&DeviceManager::listDevicesHandler, this));
+  server.on("/controls", HTTP_GET, std::bind(&DeviceManager::controlsPageHandler, this));
   server.on("/info", HTTP_GET, std::bind(&DeviceManager::infoHandler, this));
   server.on("/rs", HTTP_GET, std::bind(&DeviceManager::restartHander, this));
 
   server.on("/add", HTTP_POST, std::bind(&DeviceManager::addDeviceHander, this));
+  server.on("/c", HTTP_POST, std::bind(&DeviceManager::setControlsHandler, this));
+
   server.onNotFound(std::bind(&DeviceManager::notFoundHander, this));
 
   server.begin();
@@ -217,6 +251,31 @@ void DeviceManager::addDeviceHander() {
   }
 }
 
+void DeviceManager::setControlsHandler() {
+  DEBUG_DM("[Handler] Controls");
+  uint8_t status = readROM(DEVICE_COUNT_ADDR);
+  if (server.hasArg("alexa")) {
+    status |= (1UL << 4);
+    _alexa = true;
+  } else {
+    status &= ~(1UL << 4);
+    _alexa = false;
+  }
+  if (server.hasArg("mqtt")) {
+    status |= (1UL << 5);
+    _mqtt = true;
+    _mqttHost = server.arg("host");
+    _mqttPort = server.arg("port").toInt();
+    saveMqttConfs();
+  } else {
+    status &= ~(1UL << 5);
+    _mqtt = false;
+  }
+  writeROM(DEVICE_COUNT_ADDR, status);
+  server.sendHeader("Location", String("/controls"), true);
+  server.send ( 302, "text/plain", "");
+}
+
 void DeviceManager::delDevicesHandler() {
   DEBUG_DM("[Handler] Del Device");
 
@@ -228,6 +287,38 @@ void DeviceManager::delDevicesHandler() {
     server.sendHeader("Location", String("/"), true);
   }
   server.send ( 302, "text/plain", "");
+}
+
+void DeviceManager::controlsPageHandler() {
+  DEBUG_DM("[Handler] Controls Page");
+  String page = FPSTR(HTML_HEAD);
+  page.replace("{v}", "Devices");
+  page += FPSTR(HTML_CONFIRM_SCRIPT);;
+  page += FPSTR(HTML_DEVICES_SCRIPT);
+  page += FPSTR(HTML_STYLE);
+  page += FPSTR(HTML_HEAD_END);
+  page += FPSTR(HTML_HEADER);
+  page.replace("{v}", "Controls");
+  page += "<br/><div>";
+  page += FPSTR(HTML_FORM_CONTROLS);
+  if (_mqtt) {
+    page.replace("{m}", "checked");
+  } else {
+    page.replace("{m}", "");
+  }
+  if (_alexa) {
+    page.replace("{a}", "checked");
+  } else {
+    page.replace("{a}", "");
+  }
+  page.replace("{hv}", _mqttHost);
+  page.replace("{pv}", String(_mqttPort));
+  page += "</br></br><input type=\"button\" class=\"addDevice\" onClick=\"confSubmit(this.form);\" value=\"Update\" ></form>";
+  page += "</div>";
+  page += FPSTR(HTML_BACK);
+  page += FPSTR(HTML_END);
+
+  server.send(200, "text/html", page);
 }
 
 void DeviceManager::listDevicesHandler() {

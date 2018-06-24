@@ -17,6 +17,8 @@
 #define DEVICE_COUNT_ADDR 0  // address 0 of EEPROM
 #define SIZE sizeof(Device) * MAX_DEVICES // Maxing at 5 devices for now
 
+#define MQTT_HOST_LENGTH 50
+
 #include <EEPROM.h>
 #include <ESP8266WebServer.h>
 #include <memory>
@@ -30,13 +32,19 @@ const char HTML_CONFIRM_SCRIPT[] PROGMEM  = "<script type=\"text/javascript\">fu
 const char HTML_DEVICES_SCRIPT[] PROGMEM  = "<script>function onLoad(){var closebtns = document.getElementsByClassName(\"close\"); var i; for (i = 0; i < closebtns.length; i++) { closebtns[i].addEventListener(\"click\", function(e) { console.log(e); var r = new XMLHttpRequest();r.open( \"GET\", \"/del?name=\"+e.path[1].childNodes[0].textContent, false );r.send(null);window.location.href = \"/devices\";});}}</script>";
 const char HTML_HEAD_END[] PROGMEM        = "</head><body onload=\"onLoad()\"><div style='display: inline-block;min-width: 330px;border: 1px solid gray;padding: 20px;padding-bottom: 35px;padding-top: 10px; box-shadow: 3px 3px 10px 0px rgba(0,0,0,0.46);background-color: #fff;'>";
 const char HTML_HEADER[] PROGMEM          = "<h3>{v}</h3>";
-const char HTML_PORTAL_OPTIONS[] PROGMEM  = "<form action=\"/devices\" method=\"get\"><button>Devices</button></form><br/><form action=\"/info\" method=\"get\"><button>System Info</button></form><br/><form action=\"/del\" method=\"get\"><input type=\"button\" onClick=\"confSubmit(this.form);\" value=\"Factory Reset\"></form><br/><form action=\"/rs\" method=\"get\"><input type=\"button\" onClick=\"confSubmit(this.form);\" value=\"Restart\"></form>";
+const char HTML_PORTAL_OPTIONS[] PROGMEM  = "<form action=\"/devices\" method=\"get\"><button>Devices</button></form><br/><form action=\"/controls\" method=\"get\"><button>Controls</button></form><br/><form action=\"/info\" method=\"get\"><button>System Info</button></form><br/><form action=\"/del\" method=\"get\"><input type=\"button\" onClick=\"confSubmit(this.form);\" value=\"Factory Reset\"></form><br/><form action=\"/rs\" method=\"get\"><input type=\"button\" onClick=\"confSubmit(this.form);\" value=\"Restart\"></form>";
 const char HTML_FORM_ADD_DEV[] PROGMEM    = "<form action=\"/add\" method='post' style=\"padding:5px;\"><input name='name' class=\"\css-input\" length=20 placeholder='Device Name' style=\"width:70%;\"><input name='pin' class=\"\css-input\" length=4 type='number' placeholder='PIN'  style=\"width:20%; float:right;\">";
+const char HTML_FORM_CONTROLS[] PROGMEM   = "<form action=\"/c\" method=\"post\" style=\"padding:5px;\"><ul><li><input type=\"checkbox\" name=\"alexa\" {a}>Alexa Control</li><li><input type=\"checkbox\" name=\"mqtt\" {m}>MQTT<br><br><ul><li><input name=\"host\" type=\"text\" placeholder=\"MQTT Server URL\" style=\"width: 100%;\" value=\"{hv}\"></li><li><input name=\"port\" type=\"number\" placeholder=\"MQTT PORT\" style=\"width: 100%;\" value=\"{pv}\"></li></ul></li></ul>";
 const char HTML_FORM_END[] PROGMEM        = "<br/><input type=\"button\" onClick=\"confSubmit(this.form);\" value=\"Add\"></form>";
 const char HTML_DEVICE_LIST[] PROGMEM     = "<li><span class=\"name\">{d}</span> : {p} <span class=\"close\">x</span></li>";
 const char HTML_BACK[] PROGMEM            = "<div><br><br><form action=\"/\" method=\"get\"><button type='submit'>Back</button></form></div>";
 const char HTML_END[] PROGMEM             = "</div></body></html>";
 const char HTML_REDIRECT[] PROGMEM        = "<html><head><meta http-equiv=\"refresh\" content=\"5;url=/\" /></head><body><h3>{v}</h3></body></html>";
+
+typedef struct {
+  int port;
+  char host[MQTT_HOST_LENGTH];
+} MQTT;
 
 class DeviceManager {
   public:
@@ -64,10 +72,19 @@ class DeviceManager {
     void infoHandler();
     void notFoundHander();
     void restartHander();
+    void setControlsHandler();
+    void controlsPageHandler();
+    void saveMqttConfs();
+    MQTT getMqttConfs();
 
     bool _debug = true;
     bool _config = false;
+    bool _alexa = false;
+    bool _mqtt = false;
     long _buttonTimer = 0;
+
+    int _mqttPort;
+    String _mqttHost;
     uint8_t _deviceCount;
     String _apName;
 
