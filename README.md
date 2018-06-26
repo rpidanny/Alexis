@@ -1,6 +1,12 @@
 # Alexis [![Build Status](https://travis-ci.org/rpidanny/Alexis.svg?branch=develop)](https://travis-ci.org/rpidanny/Alexis)
+Alexis enables the control of any GPIO pins through Amazon Alexa or MQTT.
+The functions of GPIO pins can be configured dynamically through a Web Interface.
+Just upload the Alexis firmware and chill, everything can be configured from the UI.
+
+# Wishlist
 
 - [ ] DeviceManager
+  - [ ] GPIO Pin pool. (Don't allow specific gpio pins to be used for devices)
   - [x] Save Devices to EEPROM
   - [x] Load Devices from EEPROM
   - [ ] Controls
@@ -19,6 +25,7 @@
     - [x] Remove Device
     - [x] Reset
     - [ ] Edit Device ?
+  - [ ] IR
 
 ## License
 
