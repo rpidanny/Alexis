@@ -3,7 +3,7 @@ Alexis enables the control of any GPIO pins through Amazon Alexa or MQTT.
 The functions of GPIO pins can be configured dynamically through a Web Interface.
 Just upload the Alexis firmware and chill, everything can be configured from the UI.
 
-# Wishlist
+## Wishlist
 
 - [ ] DeviceManager
   - [ ] GPIO Pin pool. (Don't allow specific gpio pins to be used for devices)
